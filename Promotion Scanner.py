@@ -23,8 +23,6 @@ print(list)
 #     print('%s %d' % (item,cur.rowcount)) #%s - string, %d - integer
 
 #WAY 2: Shows the discount
-# list = ['Eggs'] #FOR DEBUGGING
-
 write_to = open('Shopping List Output.csv', "w", newline="")
 FileWriter = csv.writer(write_to)
 FileWriter.writerow(('Item','Merchant','Description','Price','Pre-Price Text','Price Text'))
