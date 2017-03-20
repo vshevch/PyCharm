@@ -35,19 +35,17 @@ for item in list:
     WHERE UPPER(display_name) LIKE '%""" + item + "%';"
 
     cur.execute(query)
+    cur_list = cur.fetchall()
 
-    for each in cur:
-        input_line = [item]
-        input_line.extend(each)
-        # print(input_line)
+    if(len(cur_list)) == 0:
         with open('Shopping List Output.csv', "a", newline="") as File:
             FileWriter = csv.writer(File)
-            FileWriter.writerow(input_line)
-
-    results = cur.fetchall()
-    list_final.append(results)
-# print(list_final)
-#     # print(cur.rowcount)
-
-
-
+            None_String = [item,'---','No Discounts']
+            FileWriter.writerow(None_String)
+    else:
+        for each in cur_list:
+            input_line = [item]
+            input_line.extend(each)
+            with open('Shopping List Output.csv', "a", newline="") as File:
+                FileWriter = csv.writer(File)
+                FileWriter.writerow(input_line)
