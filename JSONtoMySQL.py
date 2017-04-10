@@ -9,15 +9,19 @@ db = mysql.connector.connect(user ='root', passwd = 'tester1', database='TEST')
 cur = db.cursor() #invoke cursor function
 
 #The SQL query we are applying to work with our DB
-query = """INSERT INTO TEST (flyer_item_id, flyer_id, flyer_type_id, merchant_id, brand, display_name, description,\
+query = """INSERT INTO db_april_3 (flyer_item_id, flyer_id, flyer_type_id, merchant_id, brand, display_name, description,\
 current_price, pre_price_text, price_text, run_item_id, discount_percent, display_type, in_store_only, large_image_url,\
 x_large_image_url, dist_coupon_image_url, sku, valid_to, valid_from, disclaimer_text, flyer_type_name_identifier,\
 flyer_run_id, sale_story) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,\
 %s, %s, %s, %s)"""
 
 #Read from the list of website to connect to
-Flier_List = open('Flier_List.txt','r').read().split("\n")
-for URL in Flier_List:
+raw_file = open('Test_URL.csv', 'rU')
+for each in raw_file:
+    line = each.split(",")
+    store = line[0]
+    URL = line[1].strip()
+
     if URL != "<END>":
 
         ###DEBUGGING##
@@ -33,7 +37,7 @@ for URL in Flier_List:
         # print(type(JSON_Data))
 
         ## CODE FOR KEEPING TRACK OF THE SOURCES ##
-        qry = "INSERT INTO TEST (brand) VALUES (\""+URL+"\")"
+        qry = "INSERT INTO db_april_3 (brand) VALUES (\""+URL+"\")"
         cur.execute(qry) #Keeping track of the source
         db.commit()
 
