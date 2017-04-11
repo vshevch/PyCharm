@@ -1,30 +1,45 @@
 import mysql.connector
 import requests
 import json
+from datetime import datetime
 
 Line_Num = 0
+wk = str(datetime.now().isocalendar()[1])
 
 # Connecting to the MySQL
+
 db = mysql.connector.connect(user ='root', passwd = 'tester1', database='TEST')
 cur = db.cursor() #invoke cursor function
 
-# Queries' Definitions
+# Query Library
+
+qry_check = ("SHOW TABLES LIKE 'db_wk_%s'" % wk)
+qry_create = ("create table db_wk_%s like db_april_9" % wk)
 qry_select = """select valid_to from stores where merchant = '%s';""" # Get date query
 qry_update = "update stores set valid_to='%s' where merchant='%s'" # Update date query
-qry_insert = """INSERT INTO db_april_9 (flyer_item_id, flyer_id, flyer_type_id, merchant_id, brand, display_name, description,\
+qry_insert = ("INSERT INTO db_wk_%s" % wk) + """(flyer_item_id, flyer_id, flyer_type_id, merchant_id, brand, display_name, description,\
 current_price, pre_price_text, price_text, run_item_id, discount_percent, display_type, in_store_only, large_image_url,\
 x_large_image_url, dist_coupon_image_url, sku, valid_to, valid_from, disclaimer_text, flyer_type_name_identifier,\
 flyer_run_id, sale_story) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,\
 %s, %s, %s, %s)"""
 
-# Extract URL and Store data from the MySQL
-cur.execute("select merchant, flier_url from stores")  # Executing date SQL query
-URL_List = cur.fetchall()
+# Insert this Week's Table; if needed
 
-for i in URL_List:
+cur.execute(qry_check)
+result = cur.fetchone()
+if result:
+    print('Table \'db_wk_%s\' already EXISTS!' % wk)
+else:
+    cur.execute(qry_create)
+    print('table created for wk_'+wk)
+
+# Extract URL and Store data from the MySQL
+
+cur.execute("select merchant, flier_url from stores")  # Executing date SQL query
+Store_Table = cur.fetchall()
+for i in Store_Table:
     store = (i[0])
     URL = (i[1])
-
 
 # # Extract URL and Store data from the CSV
 # raw_file = open('Test_URL.csv', 'rU')
@@ -36,16 +51,20 @@ for i in URL_List:
     # print(store) # FOR DEBUGGING
     # print(URL) # FOR DEBUGGING
 
+# Get JSON file off Web
+
     Input_File = requests.get(URL).content.decode('ASCII')  # Get JSON off the website
     if len(Input_File) > 40:
         Input_Data = json.loads(Input_File)  # Load JSON into Python
 
 
 # PART I  - Getting JSON Date
+
         Valid_To_Data = Input_Data.get("valid_to")  # Load JSON into Python
         JSON_Date = Valid_To_Data[0:Valid_To_Data.index("T")]
 
 # PART II - Getting SQL Date
+
         cur.execute(qry_select % store)  # Executing date SQL query
         fet = cur.fetchone()
         SQL_Date = str(fet[0])
@@ -59,11 +78,13 @@ for i in URL_List:
             db.commit()
             print(store + ' updated')
 
-            #! Writting Insert Code !
-            ## CODE FOR KEEPING TRACK OF THE SOURCES ##
-            qry = "INSERT INTO db_april_9 (brand) VALUES (\"" + URL + "\")"
+# SQL for Inserting Store Information
+
+            qry = ("INSERT INTO db_wk_%s (brand) VALUES (\"%s\")" % (wk, URL))
             cur.execute(qry)  # Keeping track of the source
             db.commit()
+
+# SQL for Inserting Items Information
 
             Items_Data = Input_Data.get("items")  # Select only Items dictionary
 
@@ -90,6 +111,8 @@ for i in URL_List:
                     cur.execute(qry_insert, values)
                     db.commit()  # commits the result
                     # Line_Num = 0 #IMPORT CONTROL LINE (3 out of 3) # Reset the counter to work with the new URL
+
+# Else Clauses
                 else:
                     break
 
